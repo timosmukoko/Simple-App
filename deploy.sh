@@ -10,6 +10,9 @@ if ! command -v pm2 &> /dev/null; then
     sudo npm install -g pm2
 fi
 
+# stop any instance of our application running currently
+pm2 stop simple-app
+
 echo "Checking application directory..."
 if [ -d "$HOME/Simple-App" ]; then
     echo "Application directory exists. Pulling latest changes..."
