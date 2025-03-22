@@ -3,14 +3,14 @@ FROM cimg/node:20.10
 
 ENV NODE_ENV=production
 
-# Copy package.json and package-lock.json first for better caching
-COPY ["package.json", "package-lock.json*", "./"]
+# Upgrade npm to the required version
+RUN npm install -g npm@11.2.0
 
-# Use `npm ci` instead of `npm install` for faster, reproducible builds
+# Copy package files and install dependencies
+COPY ["package.json", "package-lock.json*", "./"]
 RUN npm ci --only=production
 
-# Copy the rest of the application
 COPY . .
 
-# Start the application
 CMD ["npm", "start"]
+
