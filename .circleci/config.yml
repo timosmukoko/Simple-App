@@ -21,27 +21,33 @@ jobs:
   build:
     working_directory: ~/Simple-App
     docker:
-      - image: circleci/node:10.16.3
+      - image: circleci/node:16  # Updated from 10.16.3 to 16 for better compatibility
     steps:
       - checkout
       - setup_remote_docker
       - run:
-          name: update-npm
-          command: 'sudo npm install -g npm@5'
+          name: Upgrade npm  # Fix npm version issue
+          command: 'sudo npm install -g npm@latest'
       - restore_cache:
           key: dependency-cache-{{ checksum "package-lock.json" }}
       - run:
-          name: install-npm
+          name: Clean old dependencies  # Prevent package-lock version conflicts
+          command: rm -rf node_modules package-lock.json
+      - run:
+          name: Install dependencies
           command: npm install
       - save_cache:
           key: dependency-cache-{{ checksum "package-lock.json" }}
           paths:
            - ./node_modules
       - run:
-          name: test-run
+          name: Debug - List test files  # Ensure tests exist in CI
+          command: ls -l test/ || echo "Test directory not found"
+      - run:
+          name: Run Tests
           command: npm run test
       - run:
-          name: docker-login
+          name: Docker Login
           command: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
       - run:
           name: Build Docker Image
@@ -49,12 +55,11 @@ jobs:
       - run:
           name: Publish Docker Image
           command: docker push $IMAGE_NAME
+
   deploy:
     docker:
-      - image: circleci/node:10.16.3
+      - image: circleci/node:16  #Also upgrade Node.js in deploy step
     steps:
       - run:
-          name: deploy-application
+          name: Deploy Application
           command: ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$EC2_PUBLIC_DNS "export SERVER=\"$SERVER\"; export PRIVATE_KEY=\"$PRIVATE_KEY\"; rm -rf Simple-App/; git clone https://github.com/timosmukoko/Simple-App.git; source Simple-App/deploy.sh"
-
-  
