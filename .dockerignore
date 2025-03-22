@@ -1,7 +1,16 @@
 # syntax=docker/dockerfile:1
-FROM circleci/node:20.10
+FROM cimg/node:20.10
+
 ENV NODE_ENV=production
+
+# Copy package.json and package-lock.json first for better caching
 COPY ["package.json", "package-lock.json*", "./"]
-RUN sudo npm install
+
+# Use `npm ci` instead of `npm install` for faster, reproducible builds
+RUN npm ci --only=production
+
+# Copy the rest of the application
 COPY . .
-CMD [ "npm", "start" ]
+
+# Start the application
+CMD ["npm", "start"]
